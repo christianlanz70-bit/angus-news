@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Angus News</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📰</text></svg>" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Georgia:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Georgia', serif; background-color: #faf8f3; color: #1a1a1a; line-height: 1.6; }
+        .container { min-height: 100vh; display: flex; flex-direction: column; }
+        nav { background-color: #fff; border-bottom: 3px solid #000; padding: 1.5rem 2rem; }
+        .nav-container { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .nav-logo { font-family: 'Playfair Display', serif; font-size: 1.8rem; cursor: pointer; font-weight: 700; }
+        .nav-links { display: flex; gap: 2rem; list-style: none; }
+        .nav-links button { background: none; border: none; font-size: 0.95rem; font-weight: 500; cursor: pointer; }
+        main { flex: 1; max-width: 1400px; width: 100%; margin: 0 auto; padding: 3rem 2rem; }
+        .hero { text-align: center; margin-bottom: 3rem; }
+        .site-title { font-family: 'Playfair Display', serif; font-size: 4rem; font-weight: 700; }
+        .featured-story { background: #fff; padding: 2rem; margin-bottom: 3rem; border: 1px solid #ddd; }
+        .featured-image { width: 100%; max-height: 400px; object-fit: cover; margin-bottom: 1.5rem; }
+        .story-headline { font-family: 'Playfair Display', serif; font-size: 2.5rem; margin-bottom: 1rem; }
+        .story-deck { font-style: italic; color: #555; margin-bottom: 1rem; }
+        .story-meta { display: flex; gap: 1.5rem; font-size: 0.9rem; color: #888; margin-bottom: 1rem; }
+        .story-excerpt { color: #333; line-height: 1.7; }
+        .admin-page { max-width: 900px; }
+        .admin-page h1 { font-family: 'Playfair Display', serif; font-size: 2.5rem; margin-bottom: 2rem; }
+        .form-group { margin-bottom: 1.5rem; display: flex; flex-direction: column; }
+        .form-group label { font-weight: 600; margin-bottom: 0.5rem; }
+        .form-group input, .form-group textarea, .form-group select { font-size: 1rem; padding: 0.75rem; border: 1px solid #ddd; }
+        .form-group textarea { resize: vertical; min-height: 150px; }
+        .publish-btn { background-color: #000; color: #fff; border: none; padding: 1rem 2rem; font-size: 1rem; font-weight: 600; cursor: pointer; }
+        .publish-btn:hover { opacity: 0.9; }
+        .home-page, .about-page, .contact-page { display: none; }
+        .home-page.active, .admin-page.active, .about-page.active, .contact-page.active { display: block; }
+        .loading { color: #888; font-style: italic; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <div class="nav-container">
+                <div class="nav-logo" onclick="showPage('home')">📰 ANGUS NEWS</div>
+                <ul class="nav-links">
+                    <li><button onclick="showPage('home')">Home</button></li>
+                    <li><button onclick="showPage('about')">About</button></li>
+                    <li><button onclick="showPage('contact')">Contact</button></li>
+                </ul>
+            </div>
+        </nav>
+
+        <main>
+            <div class="home-page active">
+                <section class="hero">
+                    <h1 class="site-title">ANGUS NEWS</h1>
+                    <p>Local Stories. Independent Journalism.</p>
+                </section>
+                <div id="featuredStory" class="featured-story">
+                    <p class="loading">Loading latest story...</p>
+                </div>
+            </div>
+
+            <div class="admin-page">
+                <h1>Admin Panel</h1>
+                <form onsubmit="publishStory(event)">
+                    <div class="form-group">
+                        <label>Headline</label>
+                        <input type="text" id="headline" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Byline</label>
+                        <input type="text" id="byline" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Deck</label>
+                        <input type="text" id="deck" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Excerpt</label>
+                        <textarea id="excerpt" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Featured Image</label>
+                        <input type="file" id="featuredImage" accept="image/*">
+                    </div>
+                    <button type="submit" class="publish-btn">Publish Story</button>
+                </form>
+            </div>
+
+            <div class="about-page">
+                <h1>About Angus News</h1>
+                <p>Independent local journalism for Angus and Simcoe County.</p>
+            </div>
+
+            <div class="contact-page">
+                <h1>Contact</h1>
+                <p>Email: AngusNewsOfficial@gmail.com</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyB6K0wCI1ot7gu_2CBzuphPD_Mpp9wws78",
+            authDomain: "angusnews-65c97.firebaseapp.com",
+            projectId: "angusnews-65c97",
+            storageBucket: "angusnews-65c97.firebasestorage.app",
+            messagingSenderId: "1056363903722",
+            appId: "1:1056363903722:web:dc3b857172d4929faf7593"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+
+        function showPage(page) {
+            document.querySelectorAll('.home-page, .admin-page, .about-page, .contact-page').forEach(el => el.classList.remove('active'));
+            if (page === 'home') document.querySelector('.home-page').classList.add('active');
+            if (page === 'admin') document.querySelector('.admin-page').classList.add('active');
+            if (page === 'about') document.querySelector('.about-page').classList.add('active');
+            if (page === 'contact') document.querySelector('.contact-page').classList.add('active');
+        }
+
+        async function publishStory(e) {
+            e.preventDefault();
+            const headline = document.getElementById('headline').value;
+            const byline = document.getElementById('byline').value;
+            const deck = document.getElementById('deck').value;
+            const excerpt = document.getElementById('excerpt').value;
+            const imageFile = document.getElementById('featuredImage').files[0];
+
+            let imageURL = '';
+            if (imageFile) {
+                const storageRef = storage.ref('stories/' + Date.now());
+                await storageRef.put(imageFile);
+                imageURL = await storageRef.getDownloadURL();
+            }
+
+            await db.collection('stories').add({
+                headline, byline, deck, excerpt, imageURL,
+                createdAt: new Date(),
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            document.querySelector('form').reset();
+            loadFeaturedStory();
+            alert('Story published!');
+        }
+
+        async function loadFeaturedStory() {
+            const snapshot = await db.collection('stories').orderBy('createdAt', 'desc').limit(1).get();
+            if (snapshot.empty) {
+                document.getElementById('featuredStory').innerHTML = '<p>No stories yet</p>';
+                return;
+            }
+            const story = snapshot.docs[0].data();
+            document.getElementById('featuredStory').innerHTML = `
+                ${story.imageURL ? `<img src="${story.imageURL}" class="featured-image">` : ''}
+                <h2 class="story-headline">${story.headline}</h2>
+                <p class="story-deck">${story.deck}</p>
+                <div class="story-meta"><span>By ${story.byline}</span><span>${story.createdAt.toDate().toLocaleDateString()}</span></div>
+                <p class="story-excerpt">${story.excerpt}</p>
+            `;
+        }
+
+        // Check if on admin page
+        if (window.location.hash === '#admin') showPage('admin');
+        loadFeaturedStory();
+    </script>
+</body>
+</html>
