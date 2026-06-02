@@ -1,1 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Angus News</title>
+  <meta name="description" content="Angus News is a clean, serious digital publication covering opinion, local affairs, and world news.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="masthead">
+      <a class="brand" href="./" data-route data-nav="home" aria-label="Angus News home">
+        <span class="logo-box">AN</span>
+        <span class="site-title">Angus News</span>
+      </a>
+      <p class="dateline" id="dateline">Independent publication</p>
+    </div>
+    <nav class="main-nav" aria-label="Primary navigation">
+      <div class="nav-inner">
+        <a href="./" data-route data-nav="home">Home</a>
+        <a href="?section=opinion" data-route data-nav="opinion">Opinion</a>
+        <a href="?section=local" data-route data-nav="local">Local</a>
+        <a href="?section=world" data-route data-nav="world">World</a>
+        <a href="?page=about" data-route data-nav="about">About</a>
+        <a href="?page=contact" data-route data-nav="contact">Contact</a>
+      </div>
+    </nav>
+  </header>
 
+  <main id="app" class="site-main" tabindex="-1"></main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <a class="footer-brand" href="./" data-route>
+        <span class="logo-box small">AN</span>
+        <span>Angus News</span>
+      </a>
+      <p>Opinion, local reporting, and world affairs.</p>
+    </div>
+  </footer>
+
+  <script src="articles.js"></script>
+  <script>
+    const CONTACT_EMAIL = "editor@angusnews.ca";
+    const CATEGORIES = ["Opinion", "Local", "World"];
+    const app = document.getElementById("app");
+
+    function escapeHTML(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (character) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[character]));
+    }
+
+    function slugify(value) {
+      return String(value ?? "")
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+    }
+
+    function articles() {
+      return Array.isArray(window.ANGUS_NEWS_ARTICLES) ? window.ANGUS_NEWS_ARTICLES : [];
+    }
+
+    function articleById(id) {
+      return articles().find((article) => article.id === id);
+    }
+
+    function articlesForSection(sectionSlug) {
+      return articles().filter((article) => slugify(article.category) === sectionSlug);
+    }
+
+    function setActiveNav(active) {
+      document.querySelectorAll("[data-nav]").forEach((link) => {
+        link.classList.toggle("is-active", link.dataset.nav === active);
+      });
+    }
+
+    function setDateline() {
+      const now = new Date();
+      const formatted = now.toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        year: "numeric"
+      });
+      document.getElementById("dateline").textContent = formatted;
+    }
+
+    function categoryUrl(category) {
+      return `?section=${slugify(category)}`;
+    }
+
+    function articleUrl(article) {
+      return `?article=${encodeURIComponent(article.id)}`;
+    }
+
+    function imageMarkup(article, className = "") {
+      const image = escapeHTML(article.image);
+      const headline = escapeHTML(article.headline);
+      const category = escapeHTML(article.category);
+
+      return `
+        <div class="image-frame ${className}">
+          ${image ? `<img src="${image}" alt="${headline}" loading="lazy" onerror="this.parentElement.classList.add('image-missing'); this.remove();">` : ""}
+          <span class="image-fallback">AN / ${category}</span>
+        </div>
+      `;
+    }
+
+    function storyMeta(article) {
+      return `
+        <p class="story-meta">
+          <span>${escapeHTML(article.byline)}</span>
+          <span>${escapeHTML(article.date)}</span>
+        </p>
+      `;
+    }
+
+    function renderHome() {
+      setActiveNav("home");
+
+      const columns = CATEGORIES.map((category) => {
+        const sectionArticles = articlesForSection(slugify(category));
+        const featured = sectionArticles[0];
+        const smallerStories = sectionArticles.slice(1, 4);
+
+        if (!featured) {
+          return `
+            <section class="section-column">
+              <a class="section-heading" href="${categoryUrl(category)}" data-route>
+                <span>${escapeHTML(category)}</span>
+                <span>All</span>
+              </a>
+              <p class="empty-state">No stories have been published here yet.</p>
+            </section>
+          `;
+        }
+
+        return `
+          <section class="section-column">
+            <a class="section-heading" href="${categoryUrl(category)}" data-route>
+              <span>${escapeHTML(category)}</span>
+              <span>All</span>
+            </a>
+            <a class="featured-story" href="${articleUrl(featured)}" data-route>
+              ${imageMarkup(featured, "feature-image")}
+              <span class="kicker">${escapeHTML(featured.category)}</span>
+              <h2>${escapeHTML(featured.headline)}</h2>
+              <p class="deck">${escapeHTML(featured.deck)}</p>
+              ${storyMeta(featured)}
+            </a>
+            <div class="story-list">
+              ${smallerStories.map((article) => `
+                <a href="${articleUrl(article)}" data-route>
+                  <h3>${escapeHTML(article.headline)}</h3>
+                  <p>${escapeHTML(article.deck)}</p>
+                  ${storyMeta(article)}
+                </a>
+              `).join("")}
+            </div>
+          </section>
+        `;
+      }).join("");
+
+      app.className = "site-main";
+      app.innerHTML = `
+        <section class="edition-strip">
+          <p>Latest edition</p>
+          <p>Opinion, local reporting, and world affairs from Angus News.</p>
+        </section>
+        <div class="home-grid">
+          ${columns}
+        </div>
+      `;
+    }
+
+    function renderSection(sectionSlug) {
+      const category = CATEGORIES.find((item) => slugify(item) === sectionSlug);
+
+      if (!category) {
+        renderNotFound();
+        return;
+      }
+
+      setActiveNav(sectionSlug);
+
+      const sectionArticles = articlesForSection(sectionSlug);
+      const featured = sectionArticles[0];
+      const remaining = sectionArticles.slice(1);
+
+      if (!featured) {
+        app.className = "site-main page-shell";
+        app.innerHTML = `
+          <section class="page-header">
+            <p class="kicker">${escapeHTML(category)}</p>
+            <h1>${escapeHTML(category)}</h1>
+            <p>No stories have been published in this section yet.</p>
+          </section>
+        `;
+        return;
+      }
+
+      app.className = "site-main page-shell";
+      app.innerHTML = `
+        <section class="page-header">
+          <p class="kicker">${escapeHTML(category)}</p>
+          <h1>${escapeHTML(category)}</h1>
+        </section>
+
+        <section class="section-feature">
+          <a class="section-feature-image" href="${articleUrl(featured)}" data-route>
+            ${imageMarkup(featured, "wide-image")}
+          </a>
+          <div>
+            <a class="headline-link" href="${articleUrl(featured)}" data-route>
+              <h2>${escapeHTML(featured.headline)}</h2>
+            </a>
+            <p class="deck large">${escapeHTML(featured.deck)}</p>
+            ${storyMeta(featured)}
+          </div>
+        </section>
+
+        <section class="archive-list" aria-label="${escapeHTML(category)} stories">
+          ${remaining.map((article) => `
+            <article class="archive-item">
+              <a href="${articleUrl(article)}" data-route>
+                <h2>${escapeHTML(article.headline)}</h2>
+                <p>${escapeHTML(article.deck)}</p>
+                ${storyMeta(article)}
+              </a>
+            </article>
+          `).join("")}
+        </section>
+      `;
+    }
+
+    function renderArticle(articleId) {
+      const article = articleById(articleId);
+
+      if (!article) {
+        renderNotFound();
+        return;
+      }
+
+      setActiveNav(slugify(article.category));
+
+      const body = Array.isArray(article.body) ? article.body : [];
+      const related = articlesForSection(slugify(article.category))
+        .filter((item) => item.id !== article.id)
+        .slice(0, 3);
+
+      app.className = "site-main article-shell";
+      app.innerHTML = `
+        <article class="article-page">
+          <a class="kicker article-kicker" href="${categoryUrl(article.category)}" data-route>${escapeHTML(article.category)}</a>
+          <h1>${escapeHTML(article.headline)}</h1>
+          <p class="article-deck">${escapeHTML(article.deck)}</p>
+          ${storyMeta(article)}
+          ${imageMarkup(article, "article-image")}
+          <div class="article-body">
+            ${body.map((paragraph) => `<p>${escapeHTML(paragraph)}</p>`).join("")}
+          </div>
+        </article>
+
+        ${related.length ? `
+          <aside class="related-stories">
+            <h2>More in ${escapeHTML(article.category)}</h2>
+            <div>
+              ${related.map((item) => `
+                <a href="${articleUrl(item)}" data-route>
+                  <h3>${escapeHTML(item.headline)}</h3>
+                  <p>${escapeHTML(item.deck)}</p>
+                </a>
+              `).join("")}
+            </div>
+          </aside>
+        ` : ""}
+      `;
+    }
+
+    function renderAbout() {
+      setActiveNav("about");
+      app.className = "site-main page-shell narrow-page";
+      app.innerHTML = `
+        <section class="page-header">
+          <p class="kicker">About</p>
+          <h1>About Angus News</h1>
+          <p>Angus News is a serious, independent publication built for clear reporting, careful argument, and readable context.</p>
+        </section>
+        <section class="text-page">
+          <p>Our sections are simple by design: Opinion for argument and analysis, Local for community reporting, and World for events beyond our immediate horizon.</p>
+          <p>This site is starting small, but it is designed to grow. New stories can be added to the article file, sorted into a section, and published without changing the rest of the website.</p>
+        </section>
+      `;
+    }
+
+    function renderContact() {
+      setActiveNav("contact");
+      app.className = "site-main page-shell narrow-page";
+      app.innerHTML = `
+        <section class="page-header">
+          <p class="kicker">Contact</p>
+          <h1>Contact Angus News</h1>
+          <p>For tips, corrections, pitches, and general questions, reach the newsroom by email.</p>
+        </section>
+        <section class="contact-panel">
+          <div>
+            <h2>Newsroom</h2>
+            <p><a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a></p>
+          </div>
+          <form class="contact-form" action="mailto:${CONTACT_EMAIL}" method="post" enctype="text/plain">
+            <label>
+              Name
+              <input type="text" name="name" autocomplete="name" required>
+            </label>
+            <label>
+              Email
+              <input type="email" name="email" autocomplete="email" required>
+            </label>
+            <label>
+              Message
+              <textarea name="message" rows="6" required></textarea>
+            </label>
+            <button type="submit">Send Message</button>
+          </form>
+        </section>
+      `;
+    }
+
+    function renderNotFound() {
+      setActiveNav("");
+      app.className = "site-main page-shell narrow-page";
+      app.innerHTML = `
+        <section class="page-header">
+          <p class="kicker">Angus News</p>
+          <h1>Page not found</h1>
+          <p>The page you are looking for is not available.</p>
+          <p><a class="text-button" href="./" data-route>Return home</a></p>
+        </section>
+      `;
+    }
+
+    function render() {
+      const params = new URLSearchParams(window.location.search);
+      const section = params.get("section");
+      const article = params.get("article");
+      const page = params.get("page");
+
+      setDateline();
+
+      if (article) {
+        renderArticle(article);
+      } else if (section) {
+        renderSection(section);
+      } else if (page === "about") {
+        renderAbout();
+      } else if (page === "contact") {
+        renderContact();
+      } else if (page) {
+        renderNotFound();
+      } else {
+        renderHome();
+      }
+    }
+
+    document.addEventListener("click", (event) => {
+      const link = event.target.closest("a[data-route]");
+      if (!link) return;
+
+      const href = link.getAttribute("href");
+      if (!href || href.startsWith("mailto:")) return;
+
+      event.preventDefault();
+      history.pushState({}, "", href);
+      render();
+      app.focus({ preventScroll: true });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    window.addEventListener("popstate", render);
+    render();
+  </script>
+</body>
+</html>
