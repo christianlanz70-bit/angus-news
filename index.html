@@ -307,21 +307,21 @@
     }
 
     function renderAbout() {
-      setActiveNav("about");
-      app.className = "site-main page-shell narrow-page";
-      app.innerHTML = `
-        <section class="page-header">
-          <p class="kicker">About</p>
-          <h1>About Angus News</h1>
-          <p>Angus News is a serious, independent publication built for clear reporting, careful argument, and readable context.</p>
-        </section>
-        <section class="text-page">
-          <p>Our sections are simple by design: Opinion for argument and analysis, Local for community reporting, and World for events beyond our immediate horizon.</p>
-          <p>This site is starting small, but it is designed to grow. New stories can be added to the article file, sorted into a section, and published without changing the rest of the website.</p>
-        </section>
-      `;
-    }
+  setActiveNav("about");
+  app.className = "site-main page-shell narrow-page";
+  app.innerHTML = `
+    <section class="page-header">
+      <p class="kicker">About</p>
+      <h1>About Angus News</h1>
+      <p>Angus News is an independently run local publication. We cover local, national, and international stories.</p>
+    </section>
 
+    <section class="text-page">
+      <p>Angus News is run by a local journalism student.</p>
+    </section>
+  `;
+}
+    
     function renderContact() {
       setActiveNav("contact");
       app.className = "site-main page-shell narrow-page";
