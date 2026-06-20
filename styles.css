@@ -635,3 +635,47 @@ h3 {
     flex-direction: column;
   }
 }
+
+.article-inline-image {
+  margin: 30px 0;
+}
+
+.article-inline-image img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.article-inline-image figcaption {
+  margin-top: 8px;
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.contact-info {
+  padding-top: 26px;
+}
+
+.contact-info h2 {
+  margin: 0 0 8px;
+  font-family: var(--serif);
+  font-size: 24px;
+  line-height: 1.1;
+}
+
+.contact-info p {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 22px;
+  line-height: 1.4;
+}
+
+.contact-info a {
+  color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
