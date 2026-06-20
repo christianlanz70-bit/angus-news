@@ -42,7 +42,7 @@
 
   <script src="articles.js"></script>
   <script>
-    const CONTACT_EMAIL = "editor@angusnews.ca";
+    const CONTACT_EMAIL = "angusnewsofficial@gmail.com";
     const CATEGORIES = ["Opinion", "Local", "World"];
     const app = document.getElementById("app");
 
@@ -121,6 +121,27 @@
           <span>${escapeHTML(article.date)}</span>
         </p>
       `;
+    }
+
+    function renderArticleBodyItem(item) {
+      if (typeof item === "string") {
+        return `<p>${escapeHTML(item)}</p>`;
+      }
+
+      if (item && item.type === "image") {
+        const src = escapeHTML(item.src);
+        const alt = escapeHTML(item.alt || item.caption || "Article image");
+        const caption = item.caption ? `<figcaption>${escapeHTML(item.caption)}</figcaption>` : "";
+
+        return `
+          <figure class="article-inline-image">
+            <img src="${src}" alt="${alt}" loading="lazy">
+            ${caption}
+          </figure>
+        `;
+      }
+
+      return "";
     }
 
     function renderHome() {
@@ -265,7 +286,7 @@
           ${storyMeta(article)}
           ${imageMarkup(article, "article-image")}
           <div class="article-body">
-            ${body.map((paragraph) => `<p>${escapeHTML(paragraph)}</p>`).join("")}
+            ${body.map(renderArticleBodyItem).join("")}
           </div>
         </article>
 
@@ -308,28 +329,12 @@
         <section class="page-header">
           <p class="kicker">Contact</p>
           <h1>Contact Angus News</h1>
-          <p>For tips, corrections, pitches, and general questions, reach the newsroom by email.</p>
+          <p>For tips, corrections, pitches, and questions, reach Angus News by email.</p>
         </section>
-        <section class="contact-panel">
-          <div>
-            <h2>Newsroom</h2>
-            <p><a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a></p>
-          </div>
-          <form class="contact-form" action="mailto:${CONTACT_EMAIL}" method="post" enctype="text/plain">
-            <label>
-              Name
-              <input type="text" name="name" autocomplete="name" required>
-            </label>
-            <label>
-              Email
-              <input type="email" name="email" autocomplete="email" required>
-            </label>
-            <label>
-              Message
-              <textarea name="message" rows="6" required></textarea>
-            </label>
-            <button type="submit">Send Message</button>
-          </form>
+
+        <section class="contact-info">
+          <h2>Email</h2>
+          <p><a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a></p>
         </section>
       `;
     }
@@ -388,4 +393,4 @@
     render();
   </script>
 </body>
-</html>
+</html>    
